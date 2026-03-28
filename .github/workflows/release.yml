@@ -1,46 +1,36 @@
-name: Musizer Release
-
+name: Release Musizer
 on:
   push:
     tags:
-      - "v*.*.*"
-
-permissions:
-  contents: write
+      - 'v*'
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        platform: [windows-latest]   
-
-    runs-on: ${{ matrix.platform }}
-
+  publish:
+    permissions:
+      contents: write
+    runs-on: windows-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: lts/*
+          cache: 'npm'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm install
 
-      - name: Build frontend
-        run: npm run build
-
-      - name: Build Tauri App
+      - name: Build and Release
         uses: tauri-apps/tauri-action@v0
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Musizer ${{ github.ref_name }}"
-          releaseBody: "Release of Musizer"
-          releaseDraft: false
-          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'DUET v__VERSION__'
+          releaseBody: 'Automated release for Windows.'
+          releaseDraft: true
+          prerelease: false
